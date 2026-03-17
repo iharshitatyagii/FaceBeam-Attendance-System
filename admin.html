@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - FaceBeam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #FFFFFF; /* White text */
+            background-color: #000000; /* Black background */
+            min-height: 100vh;
+        }
+        .card {
+            background: #1a1a1a; /* Very dark gray for cards */
+            border-radius: 1rem;
+            border: 1px solid #333; /* Darker border */
+            color: #FFFFFF; /* White text inside cards */
+        }
+        .card-title.text-muted {
+            color: #adb5bd !important; /* Lighter muted text */
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            background: #111; /* Slightly lighter black for sidebar */
+            border-right: 1px solid #333;
+        }
+        .nav-link {
+            color: #adb5bd;
+        }
+        .nav-link.active {
+            background-color: rgba(75, 137, 255, 0.2); /* Dimmer Blue highlight */
+            color: #fff;
+        }
+        .nav-link:hover {
+            color: #fff;
+        }
+        .sidebar-heading {
+             color: #6c757d !important; /* Darker muted text for heading */
+        }
+        .gradient-text {
+            /* Blue gradient for FaceBeam title */
+            background-image: linear-gradient(135deg, #4B89FF, #1967D2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 600;
+        }
+        .list-group-item {
+             background-color: transparent; /* Make list items transparent */
+             border-color: #333; /* Darker border */
+             color: #FFFFFF; /* White text */
+        }
+        .list-group-item.text-success {
+            /* Adjust success color for dark theme */
+            color: #20c997 !important;
+        }
+        .list-group-item.text-muted {
+            color: #6c757d !important; /* Darker muted text */
+        }
+        /* Ensure main headings are white */
+        .h2 {
+             color: #fff;
+        }
+        /* Adjust text colors for readability */
+        .text-white-50 {
+             color: rgba(255, 255, 255, 0.5) !important;
+        }
+        .text-muted {
+             color: #6c757d !important;
+        }
+         .fs-4.text-muted {
+             color: #6c757d !important;
+         }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <nav class="col-md-3 col-lg-2 d-none d-md-block sidebar p-3">
+                 <h4 class="text-center mb-4"><span class="gradient-text">✨ FaceBeam</span></h4>
+                <div class="nav flex-column nav-pills">
+                    <a class="nav-link active" href="/admin">Admin Dashboard</a>
+                    <a class="nav-link" href="/">Student Selection</a>
+                    <hr class="text-secondary">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted"><span>Management</span></h6>
+                    <ul class="nav flex-column mb-2">
+                      <li class="nav-item"><a class="nav-link" href="/register">Register New Student</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <h1 class="h2 mb-4 text-white">Live Dashboard</h1>
+                <div class="row g-4">
+                    <!-- Live Class Indicator -->
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                             <div class="card-body">
+                                <h5 class="card-title text-muted mb-3">Class in Session</h5>
+                                <div id="live-class-info"><p class="fs-4 fw-bold text-white">Loading...</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Today's Absentees -->
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-muted mb-3">Current Absentees</h5>
+                                <ul class="list-group list-group-flush small" id="absentee-list" style="max-height: 250px; overflow-y: auto;">
+                                    <li class="list-group-item">Loading...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        // Fetch and display live class info
+        async function fetchLiveClass() {
+             try {
+                const response = await fetch('/api/live_class');
+                const data = await response.json();
+                const container = document.getElementById('live-class-info');
+                if (data && data.subject_name) {
+                    container.innerHTML = `<h3 class="fw-bold text-white">${data.subject_name}</h3><p class="mb-0 text-white-50">Time: ${data.start_time} - ${data.end_time}</p>`;
+                } else {
+                    container.innerHTML = `<p class="fs-4 text-muted">No class currently in session.</p>`;
+                }
+            } catch (error) { console.error('Error fetching live class:', error); }
+        }
+
+        // Fetch and display absentees
+        async function fetchAbsentees() {
+             try {
+                const response = await fetch('/api/absentees');
+                const data = await response.json();
+                const list = document.getElementById('absentee-list');
+                list.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(student => {
+                        const item = document.createElement('li');
+                        item.className = 'list-group-item';
+                        item.textContent = student.name;
+                        list.appendChild(item);
+                    });
+                } else {
+                    const liveClassContainer = document.getElementById('live-class-info');
+                    // Check text content carefully for the exact phrase
+                    if (liveClassContainer.textContent && liveClassContainer.textContent.includes("No class currently in session")) {
+                         list.innerHTML = '<li class="list-group-item text-muted">No class in session.</li>';
+                    } else {
+                         list.innerHTML = '<li class="list-group-item text-success">All students present or none scheduled.</li>';
+                    }
+                }
+            } catch (error) { console.error('Error fetching absentees:', error); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchLiveClass();
+            fetchAbsentees();
+            setInterval(() => {
+                fetchLiveClass();
+                fetchAbsentees();
+            }, 10000); // Refresh live data every 10 seconds
+        });
+    </script>
+</body>
+</html>
+
